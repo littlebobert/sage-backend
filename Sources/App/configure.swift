@@ -7,9 +7,13 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     // Register providers first
     try services.register(FluentMySQLProvider())
     try services.register(LeafProvider())
+
+    // Register routes to the router
+    let router = EngineRouter.default()
+    try routes(router)
+    services.register(router, as: Router.self)
     
     let databaseConfig: MySQLDatabaseConfig
-    
     if let url = Environment.get("DATABASE_URL") {
         databaseConfig = try! MySQLDatabaseConfig(url: url)!
     } else if let url = Environment.get("DB_MYSQL") {
@@ -52,19 +56,16 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     var migrations = MigrationConfig()
     migrations.add(model: User.self, database: .mysql)
     services.register(migrations)
-    print("finished migrations")
-
-    // Register routes to the router
-    let router = EngineRouter.default()
-    try routes(router)
-    services.register(router, as: Router.self)
+    print("finished registering migrations")
     
     // Use Leaf for rendering views
     config.prefer(LeafRenderer.self, for: ViewRenderer.self)
+    print("finished registering Leaf for rendering views")
 
     // Register middleware
     var middlewares = MiddlewareConfig() // Create _empty_ middleware config
     middlewares.use(FileMiddleware.self) // Serves files from `Public/` directory
     middlewares.use(ErrorMiddleware.self) // Catches errors and converts to HTTP response
     services.register(middlewares)
+    print("finished registering middleware")
 }
