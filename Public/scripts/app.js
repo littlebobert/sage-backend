@@ -55,6 +55,14 @@ function onLoad() {
         return;
       }
       updateWithDisplayName(firebase.auth().currentUser.displayName);
+      
+      let xhr = new XMLHttpRequest();
+      xhr.onload = function() {
+        alert("Loaded: " + xhr.status + xhr.response);
+      }
+      xhr.open("GET", "finish-authentication?uid=" + firebase.auth().currentUser.uid, true);
+      xhr.send();
+      
       return
     }
     updateWithDisplayName(user.displayName);
