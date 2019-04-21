@@ -44,12 +44,15 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
             database: databaseName,
             transport: .unverifiedTLS
         )
+        print("finished creating database config")
     }
     services.register(databaseConfig)
+    print("finished registering database config")
     
     var migrations = MigrationConfig()
     migrations.add(model: User.self, database: .mysql)
     services.register(migrations)
+    print("finished migrations")
 
     // Register routes to the router
     let router = EngineRouter.default()
