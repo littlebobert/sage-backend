@@ -35,11 +35,6 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
             databaseName = Environment.get("DATABASE_DB") ?? "vapor"
             databasePort = 5432
         }
-        print("hostname: \(hostname)")
-        print("databasePort: \(databasePort)")
-        print("username: \(username)")
-        print("password: \(password)")
-        print("database: \(databaseName)")
         databaseConfig = MySQLDatabaseConfig(
             hostname: hostname,
             port: databasePort,
@@ -48,24 +43,22 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
             database: databaseName,
             transport: .unverifiedTLS
         )
-        print("finished creating database config")
     }
-    services.register(databaseConfig)
-    print("finished registering database config")
+    var databasesConfig = DatabasesConfig()
+    databasesConfig.add(database: MySQLDatabase(config: databaseConfig), as: .mysql)
+    databasesConfig.enableLogging(on: .mysql)
+    services.register(databasesConfig)
     
     var migrations = MigrationConfig()
     migrations.add(model: User.self, database: .mysql)
     services.register(migrations)
-    print("finished registering migrations")
     
     // Use Leaf for rendering views
     config.prefer(LeafRenderer.self, for: ViewRenderer.self)
-    print("finished registering Leaf for rendering views")
 
     // Register middleware
     var middlewares = MiddlewareConfig() // Create _empty_ middleware config
     middlewares.use(FileMiddleware.self) // Serves files from `Public/` directory
     middlewares.use(ErrorMiddleware.self) // Catches errors and converts to HTTP response
     services.register(middlewares)
-    print("finished registering middleware")
 }
