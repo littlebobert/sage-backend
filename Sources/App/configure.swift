@@ -27,13 +27,13 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
         if (env == .testing) {
             databaseName = "vapor-test"
             if let testPort = Environment.get("DATABASE_PORT") {
-                databasePort = Int(testPort) ?? 5433
+                databasePort = Int(testPort) ?? 3306
             } else {
-                databasePort = 5433
+                databasePort = 3306
             }
         } else {
             databaseName = Environment.get("DATABASE_DB") ?? "vapor"
-            databasePort = 5432
+            databasePort = 3306
         }
         databaseConfig = MySQLDatabaseConfig(
             hostname: hostname,
