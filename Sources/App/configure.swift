@@ -8,15 +8,15 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     try services.register(FluentMySQLProvider())
     try services.register(LeafProvider())
     
-//    let mysqlConfig = MySQLDatabaseConfig(
-//        hostname: "127.0.0.1",
-//        port: 3306,
-//        username: "root",
-//        password: "",
-//        database: "clients01",
-//        transport: MySQLTransportConfig.unverifiedTLS
-//    )
-//    services.register(mysqlConfig)
+    let mysqlConfig = MySQLDatabaseConfig(
+        hostname: Environment.get("$DATABASE_HOSTNAME")!,
+        port: Int(Environment.get("$DATABASE_PORT")!)!,
+        username: Environment.get("$DATABASE_USER")!,
+        password: Environment.get("$DATABASE_PASSWORD")!,
+        database: Environment.get("$DATABASE_DB")!,
+        transport: MySQLTransportConfig.unverifiedTLS
+    )
+    services.register(mysqlConfig)
     
     var migrations = MigrationConfig()
     migrations.add(model: User.self, database: .mysql)
