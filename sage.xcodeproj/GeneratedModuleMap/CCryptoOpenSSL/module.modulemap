@@ -1,0 +1,4 @@
+module CCryptoOpenSSL {
+    umbrella "/Users/justin/Desktop/sage-backend/.build/checkouts/crypto/Sources/CCryptoOpenSSL/include"
+    export *
+}

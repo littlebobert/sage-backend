@@ -1,0 +1,7 @@
+#set("title") { Sage: Error }
+
+#set("body") {
+	<div>There’s been an error: #(errorDescription)</div>
+}
+
+#embed("base")

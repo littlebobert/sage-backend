@@ -1,0 +1,4 @@
+module CNIOOpenSSL {
+    umbrella "/Users/justin/Desktop/sage-backend/.build/checkouts/swift-nio-ssl/Sources/CNIOOpenSSL/include"
+    export *
+}
