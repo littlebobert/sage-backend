@@ -10,6 +10,10 @@ firebase.initializeApp(firebaseConfig);
 
 var provider = new firebase.auth.TwitterAuthProvider();
 
+function connectWithStripe(state) {
+  window.location = "https://connect.stripe.com/oauth/authorize?response_type=code&amp;client_id=ca_32D88BD1qLklliziD7gYQvctJIhWBSQ7&amp;scope=read_write&amp;state=" + state;
+}
+
 function updateWithDisplayName(displayName, stripeButtonState) {
   var content = document.getElementById("content");
   
@@ -19,7 +23,10 @@ function updateWithDisplayName(displayName, stripeButtonState) {
   
   if (stripeButtonState != null) {
     var stripeButtonSection = document.createElement("div");
-    stripeButtonSection.innerHTML = "<input type='button' onclick='window.location=https://connect.stripe.com/oauth/authorize?response_type=code&amp;client_id=ca_32D88BD1qLklliziD7gYQvctJIhWBSQ7&amp;scope=read_write' value='Connect with Stripe'>"
+    var stripeButton = document.createElement("button");
+    stripeButton.innerText = "Connect with Stripe";
+    stripeButton.onclick = function() { connectWithStripe(stripeButtonState) };
+    stripeButtonSection.appendChild(stripeButton);
     content.appendChild(stripeButtonSection);
   }
   
@@ -63,8 +70,6 @@ function onLoad() {
       
       let xhr = new XMLHttpRequest();
       xhr.onload = function() {
-        alert("xhr.status: " + xhr.status + ", xhr.response: " + xhr.response);
-        
         if (xhr.status == 200) {
           var response = JSON.parse(xhr.response);
           if (response.status == "finished") {

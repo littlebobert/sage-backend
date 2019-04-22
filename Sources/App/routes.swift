@@ -39,6 +39,12 @@ extension User: MySQLMigration {
     
 }
 
+private func getFuture(from string: String, req: Request) -> Future<String> {
+    let promise = req.eventLoop.newPromise(of: String.self)
+    promise.succeed(result: string)
+    return promise.futureResult
+}
+
 /// Register your application's routes here.
 public func routes(_ router: Router) throws {
     // "It works" page
@@ -60,33 +66,45 @@ public func routes(_ router: Router) throws {
         return try req.view().render("welcome")
     }
     
-    router.get("stripe-authentication") { req -> String in
+    router.get("stripe-authentication") { req -> Future<String> in
         guard let uid = try? req.query.get(String.self, at: "uid") else {
             throw Abort(.notFound, reason: "You must provide a Firebase UID.")
         }
-        guard let _ = try? User.find(uid, on: req).wait() else {
-            // We don’t have a User in the database for this uid yet.
-            guard let _ = try? User().create(on: req).wait() else {
-                throw Abort(.notFound, reason: "Couldn’t create User") // to do: use a more appropriate error here.
+        let future = User.find(uid, on: req).then({ (user) -> EventLoopFuture<String> in
+            guard let user = user else {
+                // We don’t have a User in the database for this uid yet.
+                let newUserFuture = User().create(on: req).then({ (user) -> EventLoopFuture<String> in
+                    let state = UUID().uuidString
+                    stateTokens[state] = uid
+                    let stripeAuthenticationResponse = StripeAuthenticationResponse(
+                        status: StripeAuthenticationResponseStatus.notAuthenticated.rawValue,
+                        state: state)
+                    let responseData = try! JSONEncoder().encode(stripeAuthenticationResponse)
+                    let responseString = String(data: responseData, encoding: .utf8)!
+                    return getFuture(from: responseString, req: req)
+                })
+                return newUserFuture
             }
-            let state = UUID().uuidString
-            stateTokens[state] = uid
+            // We have a User for this uid.
+            guard let _ = user.stripeAuthenticationCode else {
+                // This User hasn’t authenticated with Stripe yet.
+                let state = UUID().uuidString
+                stateTokens[state] = uid
+                let stripeAuthenticationResponse = StripeAuthenticationResponse(
+                    status: StripeAuthenticationResponseStatus.notAuthenticated.rawValue,
+                    state: state)
+                let responseData = try! JSONEncoder().encode(stripeAuthenticationResponse)
+                let responseString = String(data: responseData, encoding: .utf8)!
+                return getFuture(from: responseString, req: req)
+            }
+            
             let stripeAuthenticationResponse = StripeAuthenticationResponse(
-                status: StripeAuthenticationResponseStatus.notAuthenticated.rawValue,
-                state: state)
-            guard let responseData = try? JSONEncoder().encode(stripeAuthenticationResponse), let responseString = String(data: responseData, encoding: .utf8) else {
-                throw Abort(.notFound, reason: "Failed to create JSON response.") // to do: use a more appropriate error here.
-            }
-            return responseString
-        }
-        
-        // We found a User for this uid, just tell the client we are finished.
-        let stripeAuthenticationResponse = StripeAuthenticationResponse(
-            status: StripeAuthenticationResponseStatus.finished.rawValue
-        )
-        guard let responseData = try? JSONEncoder().encode(stripeAuthenticationResponse), let responseString = String(data: responseData, encoding: .utf8) else {
-            throw Abort(.notFound, reason: "Failed to create JSON response.") // to do: use a more appropriate error here.
-        }
-        return responseString
+                status: StripeAuthenticationResponseStatus.finished.rawValue
+            )
+            let responseData = try! JSONEncoder().encode(stripeAuthenticationResponse)
+            let responseString = String(data: responseData, encoding: .utf8)!
+            return getFuture(from: responseString, req: req)
+        })
+        return future
     }
 }
