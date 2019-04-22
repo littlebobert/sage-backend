@@ -65,7 +65,7 @@ function onLoad() {
       xhr.onload = function() {
         alert("xhr.status: " + xhr.status + ", xhr.response: " + xhr.response);
         
-        if xhr.status == 200 {
+        if (xhr.status == 200) {
           var response = JSON.parse(xhr.response);
           if (response.status == "finished") {
             updateWithDisplayName(firebase.auth().currentUser.displayName, null);
