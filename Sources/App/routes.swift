@@ -59,11 +59,24 @@ public func routes(_ router: Router) throws {
                 "errorDescription": errorDescription ?? "An unknown error occured."
             ])
         }
-        let scope = try req.query.get(String.self, at: "scope")
         let state = try req.query.get(String.self, at: "state")
-        let code = try req.query.get(String.self, at: "code")
-        print("scope: \(scope), state: \(state), code: \(code)")
-        return try req.view().render("welcome")
+        
+        guard let uid = stateTokens[state] else {
+            return try req.view().render("error", [
+                "errorDescription": "We couldn’t find information about your session, please try again or contact support."
+            ])
+        }
+        let future = User.find(uid, on: req).then({ (user) -> EventLoopFuture<View> in
+            guard let user = user else {
+                return try! req.view().render("error", [
+                    "errorDescription": "We couldn’t find information about your session, please try again or contact support."
+                ])
+            }
+            let code = try! req.query.get(String.self, at: "code")
+            user.stripeAuthenticationCode = code
+            return try! req.view().render("welcome")
+        })
+        return future
     }
     
     router.get("stripe-authentication") { req -> Future<String> in
