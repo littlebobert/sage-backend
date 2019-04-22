@@ -73,7 +73,7 @@ public func routes(_ router: Router) throws {
         let future = User.find(uid, on: req).then({ (user) -> EventLoopFuture<String> in
             guard let user = user else {
                 // We don’t have a User in the database for this uid yet.
-                let newUserFuture = User().create(on: req).then({ (user) -> EventLoopFuture<String> in
+                let newUserFuture = User(id: uid).create(on: req).then({ (user) -> EventLoopFuture<String> in
                     let state = UUID().uuidString
                     stateTokens[state] = uid
                     let stripeAuthenticationResponse = StripeAuthenticationResponse(
