@@ -10,12 +10,18 @@ firebase.initializeApp(firebaseConfig);
 
 var provider = new firebase.auth.TwitterAuthProvider();
 
-function updateWithDisplayName(displayName) {
+function updateWithDisplayName(displayName, stripeButtonState) {
   var content = document.getElementById("content");
   
   var displayNameSection = document.createElement("div");
   displayNameSection.innerText = displayName;
   content.appendChild(displayNameSection);
+  
+  if (stripeButtonState != null) {
+    var stripeButtonSection = document.createElement("div");
+    stripeButtonSection.innerHTML = "<input type='button' onclick='window.location=https://connect.stripe.com/oauth/authorize?response_type=code&amp;client_id=ca_32D88BD1qLklliziD7gYQvctJIhWBSQ7&amp;scope=read_write' value='Connect with Stripe'>"
+    content.appendChild(stripeButtonSection);
+  }
   
   var button = document.createElement("button");
   button.onclick = function() { signOut(); };
@@ -54,13 +60,23 @@ function onLoad() {
         startSignIn();
         return;
       }
-      updateWithDisplayName(firebase.auth().currentUser.displayName);
       
       let xhr = new XMLHttpRequest();
       xhr.onload = function() {
-        alert("Loaded: " + xhr.status + xhr.response);
+        alert("xhr.status: " + xhr.status + ", xhr.response: " + xhr.response);
+        
+        if xhr.status == 200 {
+          var response = JSON.parse(xhr.response);
+          if (response.status == "finished") {
+            updateWithDisplayName(firebase.auth().currentUser.displayName, null);
+          } else {
+            updateWithDisplayName(firebase.auth().currentUser.displayName, response.state);
+          }
+        } else {
+          updateWithDisplayName(firebase.auth().currentUser.displayName, null);
+        }
       }
-      xhr.open("GET", "finish-authentication?uid=" + firebase.auth().currentUser.uid, true);
+      xhr.open("GET", "stripe-authentication?uid=" + firebase.auth().currentUser.uid, true);
       xhr.send();
       
       return
