@@ -28,6 +28,10 @@ function updateWithDisplayName(displayName, stripeButtonState) {
     stripeButton.onclick = function() { connectWithStripe(stripeButtonState) };
     stripeButtonSection.appendChild(stripeButton);
     content.appendChild(stripeButtonSection);
+  } else {
+    var stripeSection = document.createElement("div");
+    stripeSection.innerText = "You’re account is connected with Stripe.";
+    content.appendChild(stripeSection);
   }
   
   var button = document.createElement("button");
