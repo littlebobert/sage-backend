@@ -11,7 +11,7 @@ firebase.initializeApp(firebaseConfig);
 var provider = new firebase.auth.TwitterAuthProvider();
 
 function connectWithStripe(state) {
-  window.location = "https://connect.stripe.com/oauth/authorize?response_type=code&amp;client_id=ca_32D88BD1qLklliziD7gYQvctJIhWBSQ7&amp;scope=read_write&amp;state=" + state;
+  window.location = "https://connect.stripe.com/oauth/authorize?response_type=code&amp;client_id=ca_CeTi9PU5FinCrQsgLaiaHXJj0glqlR3I&amp;scope=read_write&amp;state=" + state;
 }
 
 function updateWithDisplayName(displayName, stripeButtonState) {
